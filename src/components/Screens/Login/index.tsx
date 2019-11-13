@@ -39,10 +39,7 @@ const LoginScreen = memo((props: IUseNavigation) => {
         return isValid;
       }),
       switchMap(() => userService.login(email, password).pipe(loader())),
-      tap(
-        () => onCompleteLogin(),
-        err => Toast.showError(err)
-      ),
+      tap(() => onCompleteLogin(), err => Toast.showError(err)),
       logError()
     );
   }, [model, navigation, onCompleteLogin]);

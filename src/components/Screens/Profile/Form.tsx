@@ -31,16 +31,14 @@ const UserEditScreen = memo((props: IUseNavigation) => {
       filter(valid => valid),
       switchMap(() => userService.save(model as IUser).pipe(loader())),
       logError(),
-      tap(
-        () => navigation.back(),
-        err => Toast.showError(err)
-      )
+      tap(() => navigation.back(), err => Toast.showError(err))
     );
   }, [model, navigation]);
 
   useEffect(() => {
     navigation.setParam({ onSave });
-  }, [navigation, onSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSave]);
 
   return (
     <Container>

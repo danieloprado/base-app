@@ -35,10 +35,7 @@ export class NotificationService {
         switchMap(n => this.received(n.notification, n.initial, n.opened)),
         logError()
       )
-      .subscribe(
-        () => {},
-        () => {}
-      );
+      .subscribe(() => {}, () => {});
   }
 
   public setup(navigator: NavigationScreenProp<any>): void {
@@ -47,7 +44,10 @@ export class NotificationService {
   }
 
   public getToken(): Observable<string> {
-    return this.token$.pipe(distinctUntilChanged(), sampleTime(500));
+    return this.token$.pipe(
+      distinctUntilChanged(),
+      sampleTime(500)
+    );
   }
 
   public hasInitialNotification(): Observable<boolean> {

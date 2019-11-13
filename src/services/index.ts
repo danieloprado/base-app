@@ -28,10 +28,7 @@ export function setupServices(navigator: NavigationScreenProp<any>): void {
       tap(user => logService.setUser(user)),
       logErrorOperator.logError()
     )
-    .subscribe(
-      () => {},
-      () => {}
-    );
+    .subscribe(() => {}, () => {});
 
   notificationService
     .getToken()
@@ -48,10 +45,7 @@ export function setupServices(navigator: NavigationScreenProp<any>): void {
       switchMap(token => userService.updateSession(token)),
       logErrorOperator.logError()
     )
-    .subscribe(
-      () => {},
-      () => {}
-    );
+    .subscribe(() => {}, () => {});
 
   setupCompleted$.next(true);
 }
