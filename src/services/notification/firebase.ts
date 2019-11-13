@@ -30,7 +30,10 @@ export class FirebaseService {
             switchMap(() => firebase.messaging().requestPermission()),
             logError()
           )
-          .subscribe(() => {}, () => {});
+          .subscribe(
+            () => {},
+            () => {}
+          );
       });
 
     firebase.messaging().onTokenRefresh(token => this.token$.next(token));
@@ -56,7 +59,10 @@ export class FirebaseService {
         tap(() => IS_DEV && firebase.messaging().subscribeToTopic('app-development')),
         logError()
       )
-      .subscribe(() => {}, () => {});
+      .subscribe(
+        () => {},
+        () => {}
+      );
   }
 
   public async testLocalNotification(): Promise<void> {

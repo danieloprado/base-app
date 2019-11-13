@@ -31,7 +31,10 @@ const UserEditScreen = memo((props: IUseNavigation) => {
       filter(valid => valid),
       switchMap(() => userService.save(model as IUser).pipe(loader())),
       logError(),
-      tap(() => navigation.back(), err => Toast.showError(err))
+      tap(
+        () => navigation.back(),
+        err => Toast.showError(err)
+      )
     );
   }, [model, navigation]);
 

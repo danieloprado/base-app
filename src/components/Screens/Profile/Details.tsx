@@ -32,7 +32,8 @@ const ProfileScreen = memo((props: IUseNavigation) => {
 
   useEffect(() => {
     navigation.setParam({ navigateEdit: user ? navigateEdit : null });
-  }, [navigateEdit, navigation, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigateEdit, user]);
 
   const loading = user === undefined && error === undefined;
 

@@ -6,7 +6,10 @@ import { NavigationStackOptions } from 'react-navigation-stack/lib/typescript/ty
 
 declare module 'react' {
   interface NamedExoticComponent<P = {}> {
-    navigationOptions: NavigationScreenConfig<NavigationStackOptions | NavigationDrawerOptions, NavigationScreenProp<any>>;
+    navigationOptions: NavigationScreenConfig<
+      NavigationStackOptions | NavigationDrawerOptions,
+      NavigationScreenProp<any>
+    >;
     defaultProps: Partial<P>;
   }
 }
