@@ -14,7 +14,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "concurrently -r \"yarn lint\" \"yarn tsc --noEmit\"",
+      "pre-commit": "concurrently -r \"yarn tsc --noEmit\"",
       "post-merge": "yarn"
     }
   },
