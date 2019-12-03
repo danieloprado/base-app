@@ -30,6 +30,8 @@ async function init() {
   await runScript(`${__dirname}/scripts/config-firebase.js`, [null], 'Deseja configurar o Firebase agora?');
   await runScript(`${__dirname}/scripts/config-sentry.js`, [null], 'Deseja configurar o Sentry?');
 
+  fs.copyFileSync('./.env.example', './.env');
+
   console.log('\n**********************************************************');
   console.log('Completo!');
   console.log('Lembre-se de criar o arquivo .env antes de iniciar o app');
