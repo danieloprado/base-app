@@ -1,5 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { Fragment, memo, useCallback, useEffect } from 'react';
+import React, { Fragment, memo, useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Button, Icon, Text } from 'react-native-elements';
 import { useCallbackObservable, useRetryableObservable } from 'react-use-observable';
@@ -11,6 +11,7 @@ import IconMessage from '~/components/Shared/IconMessage';
 import Alert from '~/facades/alert';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
+import { useHeaderOptions } from '~/hooks/useHeaderOptions';
 import userService from '~/services/user';
 
 const ProfileScreen = memo(() => {
@@ -31,13 +32,14 @@ const ProfileScreen = memo(() => {
   const navigateEdit = useCallback(() => navigation.navigate('ProfileEdit'), [navigation]);
   const navigateLogin = useCallback(() => navigation.navigate('Login', { force: true }), [navigation]);
 
-  useEffect(() => {
-    navigation.setOptions({
+  useHeaderOptions(
+    () => ({
       headerTitle: 'Perfil',
       headerRight: ({ tintColor }: any) =>
         user && <Button type='clear' onPress={navigateEdit} icon={{ name: 'pencil', color: tintColor }} />
-    });
-  }, [user, navigation, navigateEdit]);
+    }),
+    [user, navigateEdit]
+  );
 
   useFocusEffect(reload);
 

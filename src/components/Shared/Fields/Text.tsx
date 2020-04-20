@@ -33,8 +33,6 @@ const TextField = memo<IProps>(({ formik, name, tabIndex, returnKeyType, onSubmi
     [onSubmitEditing, hasNext, goNext, tabIndex, formik]
   );
 
-  console.log({ name, hasNext });
-
   return (
     <Input
       {...props}

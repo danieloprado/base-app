@@ -14,8 +14,7 @@ export default function useTabIndex(tabIndex: number, onFocusHandler: Function) 
 
     registerPosition(tabIndex, onFocusHandler);
     return () => unregisterPosition(tabIndex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabIndex, onFocusHandler]);
+  }, [tabIndex, onFocusHandler, registerPosition, unregisterPosition]);
 
   return useMemo(() => {
     if (tabIndex === undefined || tabIndex === null) return goNextEmpty;

@@ -2,12 +2,14 @@ import { useNavigation } from '@react-navigation/native';
 import React, { memo } from 'react';
 import { Dimensions, Image, ImageBackground, StyleSheet, View } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { Button, Card, Input } from 'react-native-elements';
+import { Button, Card } from 'react-native-elements';
 import { tap } from 'rxjs/operators';
 import * as yup from 'yup';
 import background from '~/assets/images/background.jpg';
 import logo from '~/assets/images/logo.png';
 import Content from '~/components/Shared/Content';
+import TabGroup from '~/components/Shared/Fields/TabGroup';
+import TextField from '~/components/Shared/Fields/Text';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import { useFormikObservable } from '~/hooks/useFormikObservable';
@@ -44,26 +46,26 @@ const LoginScreen = memo(() => {
             <Image source={logo} style={styles.img} resizeMode='contain' />
 
             <Card containerStyle={styles.formContainer}>
-              <Input
-                label='Email'
-                autoCapitalize='none'
-                keyboardType='email-address'
-                onChangeText={formik.handleChange('email')}
-                value={formik.values.email}
-                errorMessage={formik.errors.email}
-                leftIcon={{ name: 'email' }}
-              />
+              <TabGroup>
+                <TextField
+                  label='Email'
+                  name='email'
+                  autoCapitalize='none'
+                  keyboardType='email-address'
+                  tabIndex={1}
+                  formik={formik}
+                  leftIcon={{ name: 'email' }}
+                />
 
-              <Input
-                label='Senha'
-                secureTextEntry={true}
-                leftIcon={{ name: 'lock' }}
-                rightIcon={{ name: 'eye' }}
-                onChangeText={formik.handleChange('password')}
-                value={formik.values.password}
-                errorMessage={formik.errors.email}
-                onSubmitEditing={formik.handleSubmit}
-              />
+                <TextField
+                  label='Senha'
+                  name='password'
+                  secureTextEntry={true}
+                  leftIcon={{ name: 'lock' }}
+                  tabIndex={2}
+                  formik={formik}
+                />
+              </TabGroup>
 
               <Button onPress={formik.handleSubmit} style={styles.buttons} title='Entrar' />
             </Card>
