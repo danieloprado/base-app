@@ -1,9 +1,8 @@
-import { NavigationRoute, NavigationState } from 'react-navigation';
+import { NavigationState } from '@react-navigation/native';
 
-export default function getCurrentRouteState(navigationState: NavigationState | NavigationRoute): NavigationRoute {
+export default function getCurrentRouteState(navigationState: Partial<NavigationState>): any {
   if (!navigationState) return null;
 
   const route = navigationState.routes[navigationState.index];
-
-  return route.routes ? getCurrentRouteState(route) : route;
+  return route.state?.routes ? getCurrentRouteState(route.state) : route;
 }

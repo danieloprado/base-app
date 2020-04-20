@@ -6,7 +6,9 @@ import { IUserToken } from '~/interfaces/tokens/user';
 
 export class LogService {
   constructor() {
-    Sentry.init({ dsn: SENTRY_DSN, environment: ENV });
+    if (SENTRY_DSN) {
+      Sentry.init({ dsn: SENTRY_DSN, environment: ENV });
+    }
   }
 
   public setUser(user: IUserToken): void {

@@ -1,13 +1,12 @@
+import { useNavigation } from '@react-navigation/native';
 import { Button, Text } from 'native-base';
 import React, { memo, useCallback } from 'react';
-import { withNavigation } from 'react-navigation';
 import { useObservable } from 'react-use-observable';
 import { logError } from '~/helpers/rxjs-operators/logError';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
 import userService from '~/services/user';
 
-const WelcomeCard = memo((props: IUseNavigation) => {
-  const navigation = useNavigation(props);
+const WelcomeCard = memo(() => {
+  const navigation = useNavigation();
 
   const [user] = useObservable(() => {
     return userService.get().pipe(logError());
@@ -35,4 +34,4 @@ const WelcomeCard = memo((props: IUseNavigation) => {
   );
 });
 
-export default withNavigation(WelcomeCard);
+export default WelcomeCard;

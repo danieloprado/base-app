@@ -1,7 +1,7 @@
 import { InteractionManager } from '~/facades/interactionManager';
 import { INotificationHandler } from '~/interfaces/notification';
 
-export const handle: INotificationHandler = async (notification, dispatch, appStarted) => {
+export const handle: INotificationHandler = async (notification, navigator, appStarted) => {
   const reg =
     /^\[novo\sboleto\sgerado\].+\#([0-9]+)$/gi.exec(notification.body) ||
     /^\[venda\sconfirmada\].+\#([0-9]+)$/gi.exec(notification.body) ||
@@ -12,22 +12,23 @@ export const handle: INotificationHandler = async (notification, dispatch, appSt
   }
 
   if (appStarted) {
-    dispatch({
-      type: 'Navigation/NAVIGATE',
-      routeName: 'Home'
-    });
+    // navigator.dispatch({
+    //   type: 'Navigation/NAVIGATE',
+
+    //   routeName: 'Home'
+    // });
 
     await InteractionManager.runAfterInteractions();
   }
 
-  const invoiceId = Number(reg[1]);
+  // const invoiceId = Number(reg[1]);
 
-  dispatch({
-    key: `sales-details-${invoiceId}`,
-    type: 'Navigation/NAVIGATE',
-    routeName: 'SalesDetails',
-    params: { invoiceId }
-  });
+  // dispatch({
+  //   key: `sales-details-${invoiceId}`,
+  //   type: 'Navigation/NAVIGATE',
+  //   routeName: 'SalesDetails',
+  //   params: { invoiceId }
+  // });
 
   return true;
 };

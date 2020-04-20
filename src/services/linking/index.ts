@@ -1,21 +1,21 @@
+import { NavigationContainerRef } from '@react-navigation/native';
 import { Linking } from 'react-native';
 import SplashScreen from 'react-native-splash-screen';
-import { NavigationDispatch, NavigationScreenProp } from 'react-navigation';
-import { Observable, ReplaySubject, of } from 'rxjs';
-
-import { appReady } from '..';
-import { register } from './handlers/register';
+import { Observable, of, ReplaySubject } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { logError } from '~/helpers/rxjs-operators/logError';
 
+import { appReady } from '..';
+import { register } from './handlers/register';
+
 export interface ILinkingHandler {
   validate: (url: string) => boolean;
-  handle: (url: string, dispatch: NavigationDispatch, appStarted: boolean) => Promise<void>;
+  handle: (url: string, dispatch: NavigationContainerRef, appStarted: boolean) => Promise<void>;
 }
 
 export class LinkingService {
   private hasInitialUrl$: ReplaySubject<boolean>;
-  private navigator: NavigationScreenProp<any>;
+  private navigator: NavigationContainerRef;
   private handlers: ILinkingHandler[] = [];
 
   constructor() {
@@ -34,7 +34,7 @@ export class LinkingService {
     });
   }
 
-  public setup(navigator: NavigationScreenProp<any>): void {
+  public setup(navigator: NavigationContainerRef): void {
     this.navigator = navigator;
     register(this);
   }
@@ -55,7 +55,7 @@ export class LinkingService {
 
     appReady()
       .pipe(
-        switchMap(() => handler.handle(url, this.navigator.dispatch, initial)),
+        switchMap(() => handler.handle(url, this.navigator, initial)),
         tap(() => SplashScreen.hide()),
         tap(() => this.hasInitialUrl$.next(false)),
         logError()

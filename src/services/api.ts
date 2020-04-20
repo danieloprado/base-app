@@ -1,17 +1,7 @@
-import NetInfo from '@react-native-community/netinfo';
 import axios, { AxiosError, AxiosInstance, Method } from 'axios';
 import device from 'react-native-device-info';
-import { from, Observable, of, ReplaySubject, throwError } from 'rxjs';
-import {
-  catchError,
-  combineLatest,
-  distinctUntilChanged,
-  first,
-  map,
-  sampleTime,
-  shareReplay,
-  switchMap
-} from 'rxjs/operators';
+import { from, Observable, of, throwError } from 'rxjs';
+import { catchError, combineLatest, first, map, sampleTime, shareReplay, switchMap } from 'rxjs/operators';
 import { API_ENDPOINT } from '~/config';
 import { ApiError } from '~/errors/api';
 import { NoInternetError } from '~/errors/noInternet';
@@ -19,18 +9,15 @@ import { apiResponseFormatter } from '~/formatters/apiResponse';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import { IAuthToken } from '~/interfaces/authToken';
 
+import deviceService from './device';
 import tokenService from './token';
 
 export class ApiService {
   private client: AxiosInstance;
-  private connection$: ReplaySubject<boolean>;
   private tokenRefreshRequest: Observable<IAuthToken>;
 
   constructor() {
-    this.connection$ = new ReplaySubject(1);
     this.client = axios.create({ baseURL: API_ENDPOINT, timeout: 30000 });
-
-    this.watchNetwork();
   }
 
   public get<T = any>(url: string, params?: any): Observable<T> {
@@ -45,12 +32,8 @@ export class ApiService {
     return this.request('DELETE', url, params);
   }
 
-  public connection(): Observable<boolean> {
-    return this.connection$.pipe(distinctUntilChanged());
-  }
-
   private request<T>(method: Method, url: string, data: any = null, isRetry: boolean = false): Observable<T> {
-    return this.connection$.pipe(
+    return deviceService.isConnected().pipe(
       sampleTime(500),
       first(),
       map(connected => {
@@ -70,13 +53,6 @@ export class ApiService {
       map(response => apiResponseFormatter(response.data)),
       catchError(err => this.handleError(err, isRetry))
     );
-  }
-
-  private watchNetwork(): void {
-    NetInfo.isConnected.fetch().then(isConnected => this.connection$.next(isConnected));
-    NetInfo.isConnected.addEventListener('connectionChange', isConnected => {
-      this.connection$.next(isConnected);
-    });
   }
 
   private getBearerToken() {

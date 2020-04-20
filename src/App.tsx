@@ -1,63 +1,51 @@
 import ConfigProvider, { ConfigBuilder } from '@react-form-fields/native-base/ConfigProvider';
 import langConfig from '@react-form-fields/native-base/ConfigProvider/langs/pt-br';
-import snakeCase from 'lodash/snakeCase';
-import { Root, StyleProvider } from 'native-base';
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Keyboard } from 'react-native';
-import firebase from 'react-native-firebase';
+import { CommonActions, NavigationContainerRef, Route } from '@react-navigation/native';
+import { Root } from 'native-base';
+import React, { memo, useEffect, useRef, useState } from 'react';
+import { ThemeProvider } from 'react-native-elements';
 import FlashMessage from 'react-native-flash-message';
 import { MenuProvider } from 'react-native-popup-menu';
-import { NavigationActions, NavigationState, StackActions } from 'react-navigation';
 import { useObservable } from 'react-use-observable';
+import { of } from 'rxjs';
 import { delay, filter, switchMap, tap } from 'rxjs/operators';
 import Loader from '~/components/Shared/Loader';
 
-import { variablesTheme } from './assets/theme';
-import getTheme from './assets/theme/native-base-theme/components';
+import theme from './assets/theme';
 import Navigator from './components/Navigator';
 import { InteractionManager } from './facades/interactionManager';
 import Toast from './facades/toast';
-import getCurrentRouteState from './helpers/currentRouteState';
 import { setupServices } from './services';
 import cacheService from './services/cache';
-import logService from './services/log';
 import tokenService from './services/token';
-
-const theme = getTheme(variablesTheme);
 
 const config = new ConfigBuilder()
   .fromLang(langConfig)
   .setValidationOn('onSubmit')
   .setIconProps({ type: 'MaterialCommunityIcons' }, 'chevron-down', 'magnify', 'close')
   .setItemProps({ floatingLabel: false })
-  .setLoadingProps({ color: theme.variables.brandDark }, { marginRight: 10 })
   .build();
 
 const App = memo(() => {
-  const navigatorRef = useRef<Navigator>();
-  const [currentScreen, setCurrentScreen] = useState<string>();
+  const navigatorRef = useRef<NavigationContainerRef>();
+  const [currentScreen, setCurrentScreen] = useState<Route<string>>();
 
-  useEffect(() => setupServices(navigatorRef.current as any), [navigatorRef]);
+  useEffect(() => setupServices(navigatorRef.current), [navigatorRef]);
 
   useObservable(() => {
+    if (true) return of(null);
+
     return tokenService.getTokens().pipe(
       filter(tokens => !tokens),
       delay(1000),
       switchMap(() => InteractionManager.runAfterInteractions()),
-      filter(() => currentScreen !== 'Login'),
+      filter(() => currentScreen.name !== 'Login'),
       switchMap(() => cacheService.clear()),
       tap(() => {
-        (navigatorRef.current as any).dispatch(
-          StackActions.reset({
+        navigatorRef.current.dispatch(
+          CommonActions.reset({
             index: 0,
-            key: null,
-            actions: [
-              NavigationActions.navigate({
-                routeName: 'Index',
-                params: { logout: true },
-                action: NavigationActions.navigate({ routeName: 'Index', params: { logout: true } })
-              })
-            ]
+            routes: [{ name: 'Index', params: { logout: true } }]
           })
         );
       }),
@@ -65,30 +53,18 @@ const App = memo(() => {
     );
   }, [navigatorRef, currentScreen]);
 
-  const onNavigationStateChange = useCallback((prevState: NavigationState, currentState: NavigationState) => {
-    Keyboard.dismiss();
-
-    if (!currentState || !currentState.routes || !currentState.routes.length || prevState === currentState) return;
-
-    const route = getCurrentRouteState(currentState);
-
-    setCurrentScreen(route.routeName);
-    logService.breadcrumb(route.routeName, 'navigation', route.params);
-    firebase.analytics().logEvent(snakeCase(`screen_${route.routeName}`));
-  }, []);
-
   return (
-    <StyleProvider style={theme}>
+    <ThemeProvider theme={theme}>
       <MenuProvider>
         <ConfigProvider value={config}>
           <Root>
             <Loader />
-            <Navigator ref={navigatorRef as any} onNavigationStateChange={onNavigationStateChange} />
+            <Navigator ref={navigatorRef} onStateChange={setCurrentScreen} />
             <FlashMessage position='top' />
           </Root>
         </ConfigProvider>
       </MenuProvider>
-    </StyleProvider>
+    </ThemeProvider>
   );
 });
 

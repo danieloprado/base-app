@@ -1,36 +1,22 @@
-import { MonoTypeOperatorFunction, Observable, Operator, Subscriber, Subscription } from 'rxjs';
+import { Observable, Operator, Subscriber, Subscription } from 'rxjs';
+import Toast from '~/facades/toast';
+import logService from '~/services/log';
 
-let globalLogService: ILogService;
-
-export interface ILogService {
-  handleError: (error: any) => void;
-}
-
-export interface IIgnoreParam {
-  (err: any): boolean;
-}
-
-export function setup(logService: ILogService) {
-  globalLogService = logService;
-}
-
-export function logError<T>(ignore: IIgnoreParam = null): MonoTypeOperatorFunction<T> {
-  return (source: Observable<T>) => source.lift<T>(new LogErrorOperator(ignore));
+export function logError<T>(showToaster: boolean = false) {
+  return (source: Observable<T>) => source.lift<T>(new LogErrorOperator(showToaster));
 }
 
 class LogErrorOperator<T> implements Operator<T, T> {
-  constructor(private ignore: IIgnoreParam) {}
+  constructor(private showToaster: boolean) {}
 
   public call(subscriber: Subscriber<any>, source: Observable<any>): Subscription {
-    return source.subscribe(new LogErrorSubscriber(subscriber, this.ignore));
+    return source.subscribe(new LogErrorSubscriber(subscriber, this.showToaster));
   }
 }
 
 class LogErrorSubscriber extends Subscriber<any> {
-  constructor(protected destination: Subscriber<any>, private ignore: IIgnoreParam) {
+  constructor(protected destination: Subscriber<any>, private showToaster: boolean) {
     super(destination);
-
-    this.ignore = ignore;
   }
 
   public _next(value: any): void {
@@ -42,8 +28,9 @@ class LogErrorSubscriber extends Subscriber<any> {
   }
 
   public _error(err: any): void {
-    if (!this.ignore || !this.ignore(err)) {
-      globalLogService.handleError(err);
+    logService.handleError(err);
+    if (this.showToaster) {
+      Toast.showError(err);
     }
 
     this.destination.error(err);

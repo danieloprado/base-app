@@ -1,5 +1,5 @@
+import { NavigationContainerRef } from '@react-navigation/native';
 import { Notification } from 'react-native-firebase/notifications';
-import { NavigationDispatch } from 'react-navigation';
 
 export interface INotification extends Notification {
   data: INotificationData;
@@ -12,5 +12,5 @@ export interface INotificationData {
 }
 
 export interface INotificationHandler {
-  (notification: INotificationData, dispatch: NavigationDispatch, appStarted: boolean): Promise<boolean>;
+  (notification: INotificationData, navigatorRef: NavigationContainerRef, appStarted: boolean): Promise<boolean>;
 }

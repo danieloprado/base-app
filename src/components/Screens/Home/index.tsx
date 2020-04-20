@@ -17,18 +17,15 @@ const HomeScreen = memo(() => {
   );
 });
 
-HomeScreen.navigationOptions = ({ navigation }) => {
+HomeScreen.navigationOptions = () => {
   return {
-    title: 'Início',
-    tabBarLabel: 'Início',
+    headerTitle: 'Início',
     headerLeft: () => (
-      <Button style={classes.headerButton} onPress={navigation.openDrawer}>
+      <Button style={classes.headerButton}>
         <Icon name='menu' style={classes.headerButtonIcon} />
       </Button>
     ),
-
-    headerRight: <ButtonHeaderProfile />,
-    drawerIcon: ({ tintColor }) => <Icon name='home' style={{ color: tintColor }} />
+    headerRight: () => <ButtonHeaderProfile />
   };
 };
 

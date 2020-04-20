@@ -1,11 +1,11 @@
 import firebase, { RNFirebase } from 'react-native-firebase';
 import { Observable, of, ReplaySubject } from 'rxjs';
 import { filter, first, switchMap, tap } from 'rxjs/operators';
-import { variablesTheme } from '~/assets/theme';
 import { IS_ANDROID, IS_DEV, IS_IOS } from '~/config';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import { INotification } from '~/interfaces/notification';
 
+import logService from '../log';
 import tokenService from '../token';
 
 export class FirebaseService {
@@ -27,25 +27,27 @@ export class FirebaseService {
           .pipe(
             filter(isAuthenticated => isAuthenticated),
             first(),
-            switchMap(() => firebase.messaging().requestPermission()),
-            logError()
+            switchMap(() => firebase.messaging().requestPermission())
           )
-          .subscribe(() => {}, () => {});
-      });
+          .subscribe(
+            () => {},
+            () => {}
+          );
+      })
+      .catch(err => logService.handleError(err));
 
     firebase.messaging().onTokenRefresh(token => this.token$.next(token));
     firebase
       .messaging()
       .getToken()
-      .then(token => this.token$.next(token));
+      .then(token => this.token$.next(token))
+      .catch(() => {});
 
     firebase
       .notifications()
       .getInitialNotification()
-      .then(n => {
-        console.log('INITIAL: ' + n);
-        this.notificationCallback(true, true)(n && n.notification);
-      });
+      .then(n => this.notificationCallback(true, true)(n && n.notification))
+      .catch(err => logService.handleError(err));
 
     firebase.notifications().onNotification(this.notificationCallback(false, false));
     firebase.notifications().onNotificationOpened(n => this.notificationCallback(false, true)(n.notification));
@@ -56,7 +58,10 @@ export class FirebaseService {
         tap(() => IS_DEV && firebase.messaging().subscribeToTopic('app-development')),
         logError()
       )
-      .subscribe(() => {}, () => {});
+      .subscribe(
+        () => {},
+        () => {}
+      );
   }
 
   public async testLocalNotification(): Promise<void> {
@@ -90,7 +95,7 @@ export class FirebaseService {
       newNotification = newNotification.android
         .setChannelId(notification.android.channelId || notification.data.android_channel_id || 'default')
         .android.setSmallIcon('@mipmap/ic_notification')
-        .android.setColor(variablesTheme.brandPrimary);
+        .android.setColor('#ffcd33');
     }
 
     return of(true).pipe(
@@ -99,7 +104,10 @@ export class FirebaseService {
           .notifications()
           .displayNotification(newNotification)
           .then(() => true)
-          .catch(err => console.error(err) as any);
+          .catch(err => {
+            logService.handleError(err);
+            return false;
+          });
       })
     );
   }
@@ -108,12 +116,17 @@ export class FirebaseService {
     id: string,
     name: string,
     sound: string = 'default',
-    priority: RNFirebase.notifications.Android.Importance = firebase.notifications.Android.Importance.High
+    priority: RNFirebase.notifications.Android.Importance = firebase.notifications.Android.Importance.High,
+    forceRecreate: boolean = false
   ) {
-    if (IS_IOS) return;
+    if (IS_IOS) return null;
 
-    const channel = new firebase.notifications.Android.Channel(id, name, priority).setSound(sound);
-    await firebase.notifications().android.createChannel(channel);
+    if (forceRecreate) await firebase.notifications().android.deleteChannel(id);
+    await firebase
+      .notifications()
+      .android.createChannel(new firebase.notifications.Android.Channel(id, name, priority).setSound(sound));
+
+    return firebase.notifications().android.getChannel(id);
   }
 
   private notificationCallback(initial: boolean, opened: boolean): any {

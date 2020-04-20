@@ -1,39 +1,48 @@
-import { createAppContainer } from 'react-navigation';
-import IndexPage from '~/components/Screens';
-import DevPage from '~/components/Screens/_Dev';
-import LoginPage from '~/components/Screens/Login';
-import UserEditPage from '~/components/Screens/Profile/Form';
-import getNavigationOptions from '~/helpers/getNavigationOptions';
+// @refresh reset
+import { NavigationContainer, NavigationContainerRef, NavigationState, Route } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import snakeCase from 'lodash/snakeCase';
+import React, { forwardRef, memo, RefAttributes, useCallback } from 'react';
+import { Keyboard } from 'react-native';
+import firebase from 'react-native-firebase';
+import logService from '~/services/log';
 
-import HomeDrawerNavigator, { HomeDrawerScreens } from './HomeDrawer';
-import { createStackNavigator } from 'react-navigation-stack';
-import { variablesTheme } from '~/assets/theme';
+import IndexScreen from '../Screens';
+import HomeScreen from '../Screens/Home';
+import LoginScreen from '../Screens/Login';
 
-// import HomeTabNavigator, { HomeTabScreens } from './HomeTab';
-const Navigator = createStackNavigator(
-  {
-    Index: { screen: IndexPage },
-    Login: { screen: LoginPage },
+const Stack = createStackNavigator();
 
-    Home: {
-      screen: HomeDrawerNavigator,
-      navigationOptions: getNavigationOptions(HomeDrawerScreens)
-    },
+interface IProps extends RefAttributes<NavigationContainerRef> {
+  onStateChange: (route: Route<string>) => void;
+}
 
-    UserEdit: { screen: UserEditPage },
-    Dev: { screen: DevPage }
-  },
-  {
-    // headerMode: 'none',
-    headerBackTitleVisible: false,
-    initialRouteName: 'Index',
-    defaultNavigationOptions: {
-      headerStyle: {
-        backgroundColor: variablesTheme.toolbarDefaultBg
+const Navigator = memo<IProps>(
+  forwardRef(({ onStateChange }, ref: () => NavigationContainerRef) => {
+    const handleStateChange = useCallback(
+      (state: NavigationState) => {
+        Keyboard.dismiss();
+
+        if (!state || !state.routes || !state.routes.length) return;
+
+        const route = state.routes[state.index];
+        onStateChange(route);
+        logService.breadcrumb(route.name, 'navigation', route.params);
+        firebase.analytics().logEvent(snakeCase(`screen_${route.name}`));
       },
-      headerTintColor: variablesTheme.toolbarBtnTextColor
-    }
-  }
+      [onStateChange]
+    );
+
+    return (
+      <NavigationContainer ref={ref} onStateChange={handleStateChange}>
+        <Stack.Navigator>
+          <Stack.Screen name='Index' component={IndexScreen} options={IndexScreen.navigationOptions} />
+          <Stack.Screen name='Home' component={HomeScreen} options={HomeScreen.navigationOptions} />
+          <Stack.Screen name='Login' component={LoginScreen} options={LoginScreen.navigationOptions} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  })
 );
 
-export default createAppContainer(Navigator);
+export default Navigator;

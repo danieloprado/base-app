@@ -1,25 +1,26 @@
 import FieldText from '@react-form-fields/native-base/Text';
 import ValidationContext, { IValidationContextRef } from '@react-form-fields/native-base/ValidationContext';
-import { Button, Container, Content, Form, Icon, List } from 'native-base';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { Container, Content, Form, List } from 'native-base';
 import React, { memo, useEffect, useRef } from 'react';
 import { Keyboard } from 'react-native';
 import { useCallbackObservable } from 'react-use-observable';
 import { of, timer } from 'rxjs';
 import { filter, first, switchMap, tap } from 'rxjs/operators';
-import { classes } from '~/assets/theme';
 import Toast from '~/facades/toast';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import useModel from '~/hooks/useModel';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
 import { IUser } from '~/interfaces/models/user';
 import userService from '~/services/user';
 
-const UserEditScreen = memo((props: IUseNavigation) => {
-  const navigation = useNavigation(props);
+const UserEditScreen = memo(() => {
+  const navigation = useNavigation();
+  const route = useNavigationState(state => state.routes[state.index]);
+
   const validationRef = useRef<IValidationContextRef>();
 
-  const [model, setModelProp] = useModel<IUser>(navigation.getParam('user'));
+  const [model, setModelProp] = useModel<IUser>((route.params as any)?.user);
 
   const [onSave] = useCallbackObservable(() => {
     return of(true).pipe(
@@ -31,12 +32,16 @@ const UserEditScreen = memo((props: IUseNavigation) => {
       filter(valid => valid),
       switchMap(() => userService.save(model as IUser).pipe(loader())),
       logError(),
-      tap(() => navigation.back(), err => Toast.showError(err))
+      tap(
+        () => navigation.goBack(),
+        err => Toast.showError(err)
+      )
     );
   }, [model, navigation]);
 
   useEffect(() => {
-    navigation.setParam({ onSave });
+    // TODO: here
+    // navigation.setParam({ onSave });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSave]);
 
@@ -78,15 +83,15 @@ const UserEditScreen = memo((props: IUseNavigation) => {
   );
 });
 
-UserEditScreen.navigationOptions = ({ navigation }) => {
-  return {
-    title: 'Atualizar Perfil',
-    headerRight: (
-      <Button style={classes.headerButton} onPress={navigation.getParam('onSave')}>
-        <Icon name='save' />
-      </Button>
-    )
-  };
-};
+// UserEditScreen.navigationOptions = ({ navigation }) => {
+//   return {
+//     title: 'Atualizar Perfil',
+//     headerRight: (
+//       <Button style={classes.headerButton} onPress={navigation.getParam('onSave')}>
+//         <Icon name='save' />
+//       </Button>
+//     )
+//   };
+// };
 
 export default UserEditScreen;

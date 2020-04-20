@@ -1,48 +1,37 @@
-import FieldText from '@react-form-fields/native-base/Text';
-import ValidationContext, { IValidationContextRef } from '@react-form-fields/native-base/ValidationContext';
-import { Button, Card, Text } from 'native-base';
+import { useNavigation } from '@react-navigation/native';
 import React, { memo, useCallback, useRef } from 'react';
-import { Dimensions, Image, ImageBackground, Keyboard, StatusBar, StyleSheet, View } from 'react-native';
+import { Dimensions, Image, ImageBackground, StatusBar, StyleSheet, View } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { useCallbackObservable } from 'react-use-observable';
-import { of, timer } from 'rxjs';
-import { filter, first, switchMap, tap } from 'rxjs/operators';
+import { Button, Card, Input } from 'react-native-elements';
+import { tap } from 'rxjs/operators';
+import * as yup from 'yup';
 import background from '~/assets/images/background.jpg';
 import logo from '~/assets/images/logo.png';
-import { variablesTheme } from '~/assets/theme';
 import KeyboardScrollContainer from '~/components/Shared/KeyboardScrollContainer';
-import Toast from '~/facades/toast';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
-import useModel from '~/hooks/useModel';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
+import { useFormikObservable } from '~/hooks/useFormikObservable';
 import userService from '~/services/user';
 
-const LoginScreen = memo((props: IUseNavigation) => {
-  const [model, setModelProp] = useModel<{ email: string; password: string }>({});
+const validationSchema = yup.object().shape({
+  email: yup.string().required().email(),
+  password: yup.string().required()
+});
 
-  const navigation = useNavigation(props);
-  const validationRef = useRef<IValidationContextRef>();
+const LoginScreen = memo(() => {
+  const navigation = useNavigation();
 
-  const onCompleteLogin = useCallback(() => navigation.navigate('Home', null, true), [navigation]);
-
-  const [handleLogin] = useCallbackObservable(() => {
-    const { email, password } = model;
-
-    return of(true).pipe(
-      tap(() => Keyboard.dismiss()),
-      switchMap(() => timer(500)),
-      first(),
-      switchMap(() => validationRef.current.isValid()),
-      filter(isValid => {
-        if (!isValid) Toast.showError('Verifique os campos obrigatórios');
-        return isValid;
-      }),
-      switchMap(() => userService.login(email, password).pipe(loader())),
-      tap(() => onCompleteLogin(), err => Toast.showError(err)),
-      logError()
-    );
-  }, [model, navigation, onCompleteLogin]);
+  const formik = useFormikObservable({
+    initialValues: { email: '', password: '' },
+    validationSchema,
+    onSubmit(model) {
+      return userService.login(model.email, model.password).pipe(
+        loader(),
+        tap(() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] })),
+        logError(true)
+      );
+    }
+  });
 
   return (
     <View style={styles.container}>
@@ -50,45 +39,33 @@ const LoginScreen = memo((props: IUseNavigation) => {
         <KeyboardScrollContainer withSafeArea>
           <StatusBar barStyle='light-content' backgroundColor='#000000' />
 
-          <ValidationContext ref={validationRef}>
-            <Animatable.View style={styles.viewContainer} animation='fadeInUp' useNativeDriver={true}>
-              <Image source={logo} style={styles.img} resizeMode='contain' />
+          <Animatable.View style={styles.viewContainer} animation='fadeInUp' useNativeDriver={true}>
+            <Image source={logo} style={styles.img} resizeMode='contain' />
 
-              <Card style={styles.formContainer}>
-                <FieldText
-                  leftIcon='email'
-                  placeholder='Email'
-                  value={model.email}
-                  keyboardType='email-address'
-                  validation='required|email'
-                  autoCapitalize='none'
-                  flowIndex={1}
-                  marginBottom
-                  hideErrorMessage
-                  onChange={setModelProp('email', (model, value) => (model.email = value))}
-                />
+            <Card containerStyle={styles.formContainer}>
+              <Input
+                label='Email'
+                autoCapitalize='none'
+                onChangeText={formik.handleChange('email')}
+                value={formik.values.email}
+                errorMessage={formik.errors.email}
+                leftIcon={{ type: 'material-community', name: 'email' }}
+              />
 
-                <FieldText
-                  leftIcon='lock'
-                  placeholder='Senha'
-                  value={model.password}
-                  secureTextEntry={true}
-                  validation='required'
-                  flowIndex={2}
-                  marginBottom
-                  hideErrorMessage
-                  onChange={setModelProp('password', (model, value) => (model.password = value))}
-                  onSubmitEditing={handleLogin}
-                />
-              </Card>
+              <Input
+                label='Senha'
+                secureTextEntry={true}
+                leftIcon={{ type: 'material-community', name: 'lock' }}
+                rightIcon={{ type: 'material-community', name: 'eye' }}
+                onChangeText={formik.handleChange('password')}
+                value={formik.values.password}
+                errorMessage={formik.errors.email}
+                onSubmitEditing={formik.handleSubmit}
+              />
 
-              <View style={styles.registerContainer}>
-                <Button onPress={handleLogin} success block style={styles.buttons}>
-                  <Text>Entrar</Text>
-                </Button>
-              </View>
-            </Animatable.View>
-          </ValidationContext>
+              <Button onPress={formik.handleSubmit} style={styles.buttons} title='Entrar' />
+            </Card>
+          </Animatable.View>
         </KeyboardScrollContainer>
       </ImageBackground>
     </View>
@@ -97,7 +74,7 @@ const LoginScreen = memo((props: IUseNavigation) => {
 
 LoginScreen.navigationOptions = () => {
   return {
-    header: null
+    header: () => null
   };
 };
 
@@ -110,8 +87,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height: variablesTheme.deviceHeight,
-    width: variablesTheme.deviceWidth
+    height: Dimensions.get('screen').height,
+    width: Dimensions.get('screen').width
   },
   viewContainer: {
     flex: 1,
@@ -130,17 +107,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: 20,
-    width: variablesTheme.deviceWidth * 0.8,
+    width: Dimensions.get('screen').width * 0.8,
     flexShrink: 0
-  },
-  registerContainer: {
-    flex: 1,
-    flexGrow: 0,
-    flexShrink: 0
-  },
-  text: {
-    fontWeight: '600',
-    fontSize: 17
   }
 });
 

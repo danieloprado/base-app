@@ -1,15 +1,15 @@
+import { useNavigation } from '@react-navigation/native';
 import { Button, Icon } from 'native-base';
 import React, { memo, useCallback } from 'react';
 import { StyleSheet } from 'react-native';
-import { withNavigation } from 'react-navigation';
 import { useObservable } from 'react-use-observable';
-import { classes, variablesTheme } from '~/assets/theme';
 import { logError } from '~/helpers/rxjs-operators/logError';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
 import userService from '~/services/user';
 
-const ButtonHeaderProfile = memo((props: IUseNavigation) => {
-  const navigation = useNavigation(props);
+const classes: any = {};
+
+const ButtonHeaderProfile = memo(() => {
+  const navigation = useNavigation();
 
   const [user] = useObservable(() => {
     return userService.get().pipe(logError());
@@ -45,9 +45,9 @@ const styles = StyleSheet.create({
     marginRight: 15
   },
   icon: {
-    fontSize: 28,
-    color: variablesTheme.toolbarBtnTextColor
+    fontSize: 28
+    // color: variablesTheme.toolbarBtnTextColor
   }
 });
 
-export default withNavigation(ButtonHeaderProfile);
+export default ButtonHeaderProfile;

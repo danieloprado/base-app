@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import SplashScreen from 'react-native-splash-screen';
@@ -5,12 +6,11 @@ import { useObservable } from 'react-use-observable';
 import { filter, first, switchMap, tap } from 'rxjs/operators';
 import { IS_DEV } from '~/config';
 import { logError } from '~/helpers/rxjs-operators/logError';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
 import { appDefaultNavigation, appOpened } from '~/services';
 import tokenService from '~/services/token';
 
-const IndexPage = memo((props: IUseNavigation) => {
-  const navigation = useNavigation(props);
+const IndexScreen = memo(() => {
+  const navigation = useNavigation();
 
   useEffect(() => {
     appOpened();
@@ -26,7 +26,10 @@ const IndexPage = memo((props: IUseNavigation) => {
       tap(isAuthenticated => {
         setTimeout(() => SplashScreen.hide(), 500);
 
-        navigation.navigate(isAuthenticated ? 'Home' : 'Login', null, true);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: isAuthenticated ? 'Home' : 'Login' }]
+        });
       }),
       logError()
     );
@@ -35,10 +38,10 @@ const IndexPage = memo((props: IUseNavigation) => {
   return <View />;
 });
 
-IndexPage.navigationOptions = () => {
+IndexScreen.navigationOptions = () => {
   return {
-    header: null
+    header: () => null
   };
 };
 
-export default IndexPage;
+export default IndexScreen;

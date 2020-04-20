@@ -1,17 +1,17 @@
+import { NavigationContainerRef } from '@react-navigation/native';
 import SplashScreen from 'react-native-splash-screen';
-import { NavigationScreenProp } from 'react-navigation';
 import { Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, first, map, sampleTime, switchMap, tap } from 'rxjs/operators';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import { INotification, INotificationHandler } from '~/interfaces/notification';
 
 import { appReady } from '../';
-import tokenService, { TokenService } from '../token';
-import firebaseService, { FirebaseService } from './firebase';
+import tokenService from '../token';
+import firebaseService from './firebase';
 import { register } from './handlers/register';
 
 export class NotificationService {
-  private navigator: NavigationScreenProp<any>;
+  private navigator: NavigationContainerRef;
 
   private token$: ReplaySubject<string>;
   private hasInitialNotification$: ReplaySubject<boolean>;
@@ -19,35 +19,35 @@ export class NotificationService {
 
   private handlers: INotificationHandler[] = [];
 
-  constructor(private tokenService: TokenService, private firebaseService: FirebaseService) {
+  constructor() {
     this.token$ = new ReplaySubject(1);
     this.newNotification$ = new Subject();
     this.hasInitialNotification$ = new ReplaySubject(1);
 
-    this.firebaseService
+    firebaseService
       .onTokenRefresh()
       .pipe(logError())
       .subscribe(token => this.token$.next(token));
 
-    this.firebaseService
+    firebaseService
       .onNewNotification()
       .pipe(
         switchMap(n => this.received(n.notification, n.initial, n.opened)),
         logError()
       )
-      .subscribe(() => {}, () => {});
+      .subscribe(
+        () => {},
+        () => {}
+      );
   }
 
-  public setup(navigator: NavigationScreenProp<any>): void {
+  public setup(navigator: NavigationContainerRef): void {
     this.navigator = navigator;
     register(this);
   }
 
   public getToken(): Observable<string> {
-    return this.token$.pipe(
-      distinctUntilChanged(),
-      sampleTime(500)
-    );
+    return this.token$.pipe(distinctUntilChanged(), sampleTime(500));
   }
 
   public hasInitialNotification(): Observable<boolean> {
@@ -73,7 +73,7 @@ export class NotificationService {
       switchMap(() => {
         return opened || appStarted
           ? this.execNotification(notification, appStarted)
-          : this.firebaseService.createLocalNotification(notification);
+          : firebaseService.createLocalNotification(notification);
       }),
       tap(() => SplashScreen.hide())
     );
@@ -88,7 +88,7 @@ export class NotificationService {
       return of(true);
     }
 
-    return this.tokenService.getUser().pipe(
+    return tokenService.getUser().pipe(
       first(),
       map(user => {
         if (!user) return false;
@@ -100,10 +100,8 @@ export class NotificationService {
   private execNotification(notification: INotification, appStarted: boolean = false): Observable<boolean> {
     return appReady().pipe(
       switchMap(async () => {
-        const { dispatch } = this.navigator;
-
         for (const handler of this.handlers) {
-          const resolved = await handler(notification.data, dispatch, appStarted);
+          const resolved = await handler(notification.data, this.navigator, appStarted);
           if (resolved) return true;
         }
 
@@ -113,5 +111,5 @@ export class NotificationService {
   }
 }
 
-const notificationService = new NotificationService(tokenService, firebaseService);
+const notificationService = new NotificationService();
 export default notificationService;

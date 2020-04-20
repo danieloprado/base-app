@@ -1,11 +1,11 @@
+import { useNavigation } from '@react-navigation/native';
 import { Body, Button, Container, Content, Header, Icon, Left, Right, Text, Title, View } from 'native-base';
 import React, { memo, useCallback } from 'react';
 import { classes } from '~/assets/theme';
 import { ServiceError } from '~/errors/serviceError';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
 
-const DevPage = memo((props: IUseNavigation) => {
-  const navigation = useNavigation(props);
+const DevPage = memo(() => {
+  const navigation = useNavigation();
 
   const testError = useCallback((): void => {
     throw new ServiceError('Test', {
@@ -18,7 +18,7 @@ const DevPage = memo((props: IUseNavigation) => {
     <Container style={classes.cardsContainer}>
       <Header>
         <Left>
-          <Button transparent onPress={navigation.back}>
+          <Button transparent onPress={navigation.goBack}>
             <Icon active name='arrow-back' />
           </Button>
         </Left>

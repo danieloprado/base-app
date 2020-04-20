@@ -1,19 +1,19 @@
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Body, Button, Container, Content, H2, Icon, Left, List, ListItem, Spinner, Text, View } from 'native-base';
 import React, { memo, useCallback, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import { NavigationEvents } from 'react-navigation';
 import { useCallbackObservable, useRetryableObservable } from 'react-use-observable';
 import { filter, switchMap } from 'rxjs/operators';
-import { classes, variablesTheme } from '~/assets/theme';
 import ErrorMessage from '~/components/Shared/ErrorMessage';
 import Alert from '~/facades/alert';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
-import { IUseNavigation, useNavigation } from '~/hooks/useNavigation';
 import userService from '~/services/user';
 
-const ProfileScreen = memo((props: IUseNavigation) => {
-  const navigation = useNavigation(props);
+const classes: any = {};
+
+const ProfileScreen = memo(() => {
+  const navigation = useNavigation();
 
   const [user, error, , reload] = useRetryableObservable(() => {
     return userService.get().pipe(logError());
@@ -31,16 +31,17 @@ const ProfileScreen = memo((props: IUseNavigation) => {
   const navigateLogin = useCallback(() => navigation.navigate('Login', { force: true }), [navigation]);
 
   useEffect(() => {
-    navigation.setParam({ navigateEdit: user ? navigateEdit : null });
+    // todo: here
+    // navigation.setParam({ navigateEdit: user ? navigateEdit : null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigateEdit, user]);
+
+  useFocusEffect(reload);
 
   const loading = user === undefined && error === undefined;
 
   return (
     <Container>
-      <NavigationEvents onWillFocus={reload} />
-
       <Content>
         {loading && <Spinner />}
         {!loading && !user && error && <ErrorMessage error={error} />}
@@ -81,35 +82,35 @@ const ProfileScreen = memo((props: IUseNavigation) => {
   );
 });
 
-ProfileScreen.navigationOptions = ({ navigation }) => {
-  return {
-    title: 'Perfil',
-    headerLeft: () => (
-      <Button style={classes.headerButton} onPress={navigation.toggleDrawer}>
-        <Icon name='menu' />
-      </Button>
-    ),
-    headerRight: navigation.getParam('navigateEdit') && (
-      <Button style={classes.headerButton} onPress={navigation.getParam('navigateEdit')}>
-        <Icon name='create' />
-      </Button>
-    ),
-    drawerIcon: ({ tintColor }) => <Icon name='contact' style={{ color: tintColor }} />
-  };
-};
+// ProfileScreen.navigationOptions = ({ navigation }) => {
+//   return {
+//     title: 'Perfil',
+//     headerLeft: () => (
+//       <Button style={classes.headerButton} onPress={navigation.toggleDrawer}>
+//         <Icon name='menu' />
+//       </Button>
+//     ),
+//     headerRight: navigation.getParam('navigateEdit') && (
+//       <Button style={classes.headerButton} onPress={navigation.getParam('navigateEdit')}>
+//         <Icon name='create' />
+//       </Button>
+//     ),
+//     drawerIcon: ({ tintColor }) => <Icon name='contact' style={{ color: tintColor }} />
+//   };
+// };
 
 const styles = StyleSheet.create({
   loginIcon: {
     marginTop: 20,
-    marginBottom: 10,
-    color: variablesTheme.brandPrimary
+    marginBottom: 10
+    // color: variablesTheme.brandPrimary
   },
   loginText: {
     textAlign: 'center',
     marginBottom: 20
   },
   header: {
-    backgroundColor: variablesTheme.brandPrimary,
+    // backgroundColor: variablesTheme.brandPrimary,
     padding: 16,
     justifyContent: 'center',
     alignItems: 'center'

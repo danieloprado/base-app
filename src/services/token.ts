@@ -1,7 +1,7 @@
 import * as base64 from 'base-64';
 import { Observable, ReplaySubject } from 'rxjs';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
-import storageService, { StorageService } from '~/facades/storage';
+import storageService from '~/facades/storage';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import { IAuthToken } from '~/interfaces/authToken';
 import { enRoles } from '~/interfaces/models/user';
@@ -11,10 +11,10 @@ export class TokenService {
   private tokens: IAuthToken;
   private authToken$: ReplaySubject<IAuthToken>;
 
-  constructor(private storageService: StorageService) {
+  constructor() {
     this.authToken$ = new ReplaySubject(1);
 
-    this.storageService
+    storageService
       .get('authToken')
       .pipe(logError())
       .subscribe(tokens => {
@@ -60,7 +60,7 @@ export class TokenService {
   }
 
   public setTokens(tokens: IAuthToken): Observable<IAuthToken> {
-    return this.storageService.set('authToken', tokens).pipe(
+    return storageService.set('authToken', tokens).pipe(
       map(() => {
         this.tokens = tokens;
         this.authToken$.next(tokens);
@@ -76,7 +76,7 @@ export class TokenService {
   public setAccessToken(accessToken: string): Observable<void> {
     this.tokens.accessToken = accessToken;
 
-    return this.storageService.set('authToken', this.tokens).pipe(
+    return storageService.set('authToken', this.tokens).pipe(
       map(() => {
         this.authToken$.next(this.tokens);
       })
@@ -91,5 +91,5 @@ export class TokenService {
   }
 }
 
-const tokenService = new TokenService(storageService);
+const tokenService = new TokenService();
 export default tokenService;

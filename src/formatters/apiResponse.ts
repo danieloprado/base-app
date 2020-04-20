@@ -12,13 +12,10 @@ export function apiResponseFormatter<T extends { [key: string]: any }>(obj: T): 
   }
 
   if (typeof obj === 'object' && !(obj instanceof Date)) {
-    return Object.keys(obj).reduce(
-      (acc, key) => {
-        acc[key] = apiResponseFormatter(obj[key]);
-        return acc;
-      },
-      {} as any
-    ) as any;
+    return Object.keys(obj).reduce((acc, key) => {
+      acc[key] = apiResponseFormatter(obj[key]);
+      return acc;
+    }, {} as any) as any;
   }
 
   return obj;
