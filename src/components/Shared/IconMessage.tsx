@@ -1,6 +1,6 @@
-import { Button, Icon, Text, View } from 'native-base';
 import React, { memo, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button, Icon, Text } from 'react-native-elements';
 
 interface IProps {
   icon: string;
@@ -14,14 +14,10 @@ const IconMessage = memo(({ message, button, onPress, icon, disableMargin }: IPr
   const containerStyle = useMemo(() => [styles.container, disableMargin ? null : styles.margin], [disableMargin]);
 
   return (
-    <View padder style={containerStyle}>
-      <Icon type='MaterialCommunityIcons' name={icon} style={styles.icon} />
+    <View style={containerStyle}>
+      <Icon name={icon} containerStyle={styles.icon} size={100} />
       <Text style={styles.message}>{message}</Text>
-      {!!button && (
-        <Button block style={styles.button} onPress={onPress}>
-          <Text>{button}</Text>
-        </Button>
-      )}
+      {!!button && <Button style={styles.button} onPress={onPress} title={button} />}
     </View>
   );
 });
@@ -35,8 +31,7 @@ const styles = StyleSheet.create({
     marginTop: 90
   },
   icon: {
-    fontSize: 100,
-    opacity: 0.8
+    opacity: 0.6
   },
   message: {
     marginTop: 5,
@@ -45,7 +40,8 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   button: {
-    marginTop: 20
+    marginTop: 20,
+    width: 200
   }
 });
 

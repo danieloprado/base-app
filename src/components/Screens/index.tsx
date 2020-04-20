@@ -28,7 +28,7 @@ const IndexScreen = memo(() => {
 
         navigation.reset({
           index: 0,
-          routes: [{ name: isAuthenticated ? 'Home' : 'Login' }]
+          routes: [{ name: isAuthenticated ? 'Home' : 'Home' }]
         });
       }),
       logError()
@@ -37,11 +37,5 @@ const IndexScreen = memo(() => {
 
   return <View />;
 });
-
-IndexScreen.navigationOptions = () => {
-  return {
-    header: () => null
-  };
-};
 
 export default IndexScreen;

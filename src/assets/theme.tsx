@@ -2,10 +2,16 @@
 import { Theme } from 'react-native-elements';
 
 const theme: Theme<{}> = {
+  colors: {
+    primary: '#2957f5'
+  },
   Card: {
     containerStyle: {
       borderRadius: 5
     }
+  },
+  Icon: {
+    type: 'material-community'
   },
   Input: {
     labelStyle: {

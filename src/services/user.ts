@@ -33,7 +33,7 @@ export class UserService {
     return tokenService.getTokens().pipe(
       switchMap(token => {
         if (!token) {
-          return of(null);
+          return of({ firstName: 'Teste', email: 'danielprado.ad@gmail.com', roles: [] });
         }
 
         return apiService.get<IUser>('profile').pipe(cache('service-profile', { refresh }));

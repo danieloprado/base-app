@@ -1,97 +1,65 @@
-import FieldText from '@react-form-fields/native-base/Text';
-import ValidationContext, { IValidationContextRef } from '@react-form-fields/native-base/ValidationContext';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
-import { Container, Content, Form, List } from 'native-base';
-import React, { memo, useEffect, useRef } from 'react';
-import { Keyboard } from 'react-native';
-import { useCallbackObservable } from 'react-use-observable';
-import { of, timer } from 'rxjs';
-import { filter, first, switchMap, tap } from 'rxjs/operators';
-import Toast from '~/facades/toast';
+import { useNavigation } from '@react-navigation/native';
+import React, { memo } from 'react';
+import { Button } from 'react-native-elements';
+import { useObservable } from 'react-use-observable';
+import { tap } from 'rxjs/operators';
+import * as yup from 'yup';
+import Content from '~/components/Shared/Content';
+import TabGroup from '~/components/Shared/Fields/TabGroup';
+import FieldText from '~/components/Shared/Fields/Text';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
-import useModel from '~/hooks/useModel';
+import { useFormikObservable } from '~/hooks/useFormikObservable';
+import { useHeaderOptions } from '~/hooks/useHeaderOptions';
 import { IUser } from '~/interfaces/models/user';
 import userService from '~/services/user';
 
-const UserEditScreen = memo(() => {
+const validationSchema = yup.object().shape({
+  firstName: yup.string().nullable().required().min(3).max(50),
+  lastName: yup.string().nullable().min(3).max(50),
+  email: yup.string().nullable().required().email()
+});
+
+const ProfileEditScreen = memo(() => {
   const navigation = useNavigation();
-  const route = useNavigationState(state => state.routes[state.index]);
 
-  const validationRef = useRef<IValidationContextRef>();
+  const formik = useFormikObservable<IUser>({
+    validationSchema,
+    onSubmit(model) {
+      return userService.save(model).pipe(
+        loader(),
+        tap(() => navigation.goBack()),
+        logError(true)
+      );
+    }
+  });
 
-  const [model, setModelProp] = useModel<IUser>((route.params as any)?.user);
-
-  const [onSave] = useCallbackObservable(() => {
-    return of(true).pipe(
-      tap(() => Keyboard.dismiss()),
-      switchMap(() => timer(500)),
-      first(),
-      switchMap(() => validationRef.current.isValid()),
-      tap(valid => !valid && Toast.showError('Revise os campos')),
-      filter(valid => valid),
-      switchMap(() => userService.save(model as IUser).pipe(loader())),
-      logError(),
-      tap(
-        () => navigation.goBack(),
-        err => Toast.showError(err)
-      )
+  useObservable(() => {
+    return userService.get().pipe(
+      tap(user => formik.setValues(user, false)),
+      logError()
     );
-  }, [model, navigation]);
+  }, []);
 
-  useEffect(() => {
-    // TODO: here
-    // navigation.setParam({ onSave });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onSave]);
+  useHeaderOptions(
+    () => ({
+      headerTitle: 'Atualizar Perfil',
+      headerRight: ({ tintColor }) => (
+        <Button onPress={formik.handleSubmit} icon={{ name: 'content-save', color: tintColor }} />
+      )
+    }),
+    [formik]
+  );
 
   return (
-    <Container>
-      <Content padder keyboardShouldPersistTaps='handled'>
-        <Form>
-          <ValidationContext ref={validationRef}>
-            <List>
-              <FieldText
-                label='Nome'
-                validation='string|required|min:3|max:50'
-                value={model.firstName}
-                flowIndex={1}
-                onChange={setModelProp('firstName', (value, model) => (model.firstName = value))}
-              />
-
-              <FieldText
-                label='Sobrenome'
-                validation='string|max:50'
-                value={model.lastName}
-                flowIndex={2}
-                onChange={setModelProp('lastName', (value, model) => (model.lastName = value))}
-              />
-
-              <FieldText
-                label='Email'
-                validation='string|email|max:150'
-                keyboardType='email-address'
-                value={model.email}
-                flowIndex={3}
-                onChange={setModelProp('email', (value, model) => (model.email = value))}
-              />
-            </List>
-          </ValidationContext>
-        </Form>
-      </Content>
-    </Container>
+    <Content withForm>
+      <TabGroup>
+        <FieldText label='Nome' name='firstName' formik={formik} tabIndex={1} />
+        <FieldText label='Sobrenome' name='lastName' formik={formik} tabIndex={2} />
+        <FieldText label='Email' name='email' keyboardType='email-address' formik={formik} tabIndex={3} />
+      </TabGroup>
+    </Content>
   );
 });
 
-// UserEditScreen.navigationOptions = ({ navigation }) => {
-//   return {
-//     title: 'Atualizar Perfil',
-//     headerRight: (
-//       <Button style={classes.headerButton} onPress={navigation.getParam('onSave')}>
-//         <Icon name='save' />
-//       </Button>
-//     )
-//   };
-// };
-
-export default UserEditScreen;
+export default ProfileEditScreen;

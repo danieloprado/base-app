@@ -1,16 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { memo, useCallback, useRef } from 'react';
-import { Dimensions, Image, ImageBackground, StatusBar, StyleSheet, View } from 'react-native';
+import React, { memo } from 'react';
+import { Dimensions, Image, ImageBackground, StyleSheet, View } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { Button, Card, Input } from 'react-native-elements';
 import { tap } from 'rxjs/operators';
 import * as yup from 'yup';
 import background from '~/assets/images/background.jpg';
 import logo from '~/assets/images/logo.png';
-import KeyboardScrollContainer from '~/components/Shared/KeyboardScrollContainer';
+import Content from '~/components/Shared/Content';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import { useFormikObservable } from '~/hooks/useFormikObservable';
+import { useHeaderOptions } from '~/hooks/useHeaderOptions';
 import userService from '~/services/user';
 
 const validationSchema = yup.object().shape({
@@ -20,6 +21,8 @@ const validationSchema = yup.object().shape({
 
 const LoginScreen = memo(() => {
   const navigation = useNavigation();
+
+  useHeaderOptions(() => ({ header: () => null }), []);
 
   const formik = useFormikObservable({
     initialValues: { email: '', password: '' },
@@ -36,9 +39,7 @@ const LoginScreen = memo(() => {
   return (
     <View style={styles.container}>
       <ImageBackground source={background} style={styles.background}>
-        <KeyboardScrollContainer withSafeArea>
-          <StatusBar barStyle='light-content' backgroundColor='#000000' />
-
+        <Content withForm statusBarStyle='light-content' statusBarBackground='#000000'>
           <Animatable.View style={styles.viewContainer} animation='fadeInUp' useNativeDriver={true}>
             <Image source={logo} style={styles.img} resizeMode='contain' />
 
@@ -46,17 +47,18 @@ const LoginScreen = memo(() => {
               <Input
                 label='Email'
                 autoCapitalize='none'
+                keyboardType='email-address'
                 onChangeText={formik.handleChange('email')}
                 value={formik.values.email}
                 errorMessage={formik.errors.email}
-                leftIcon={{ type: 'material-community', name: 'email' }}
+                leftIcon={{ name: 'email' }}
               />
 
               <Input
                 label='Senha'
                 secureTextEntry={true}
-                leftIcon={{ type: 'material-community', name: 'lock' }}
-                rightIcon={{ type: 'material-community', name: 'eye' }}
+                leftIcon={{ name: 'lock' }}
+                rightIcon={{ name: 'eye' }}
                 onChangeText={formik.handleChange('password')}
                 value={formik.values.password}
                 errorMessage={formik.errors.email}
@@ -66,17 +68,11 @@ const LoginScreen = memo(() => {
               <Button onPress={formik.handleSubmit} style={styles.buttons} title='Entrar' />
             </Card>
           </Animatable.View>
-        </KeyboardScrollContainer>
+        </Content>
       </ImageBackground>
     </View>
   );
 });
-
-LoginScreen.navigationOptions = () => {
-  return {
-    header: () => null
-  };
-};
 
 const styles = StyleSheet.create({
   container: {

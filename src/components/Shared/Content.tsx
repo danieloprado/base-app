@@ -1,24 +1,41 @@
-import React, { memo, Props, useMemo } from 'react';
+import React, { Fragment, memo, useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
+  StatusBarProps,
   StyleProp,
   StyleSheet,
   View,
   ViewStyle
 } from 'react-native';
 
-interface IProps extends Props<{}> {
+interface IProps {
   backgroundColor?: string;
-  withSafeArea?: boolean;
+  disableSafeArea?: boolean;
   disableScroolView?: boolean;
+  withForm?: boolean;
   style?: StyleProp<ViewStyle>;
+  children: React.ReactNode;
+  disableStatusBar?: boolean;
+  statusBarStyle?: StatusBarProps['barStyle'];
+  statusBarBackground?: StatusBarProps['backgroundColor'];
 }
 
-const KeyboardScrollContainer = memo(
-  ({ children, backgroundColor, withSafeArea, disableScroolView, style }: IProps) => {
+const Content = memo(
+  ({
+    children,
+    backgroundColor,
+    disableSafeArea,
+    withForm,
+    disableScroolView,
+    style,
+    disableStatusBar,
+    statusBarStyle,
+    statusBarBackground
+  }: IProps) => {
     const containerStyle = useMemo(
       () => ({
         ...styles.container,
@@ -46,28 +63,38 @@ const KeyboardScrollContainer = memo(
       <View style={containerStyle}>{ResultView}</View>
     );
 
-    ResultView = (
-      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : null}>
-        {ResultView}
-      </KeyboardAvoidingView>
-    );
+    if (withForm) {
+      ResultView = (
+        <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : null}>
+          {ResultView}
+        </KeyboardAvoidingView>
+      );
+    }
 
-    if (withSafeArea) {
+    if (!disableSafeArea) {
       ResultView = <SafeAreaView style={containerStyle}>{ResultView}</SafeAreaView>;
     }
 
-    return ResultView;
+    return (
+      <Fragment>
+        {!disableStatusBar && (
+          <StatusBar barStyle={statusBarStyle ?? 'light-content'} backgroundColor={statusBarBackground ?? '#000000'} />
+        )}
+        {ResultView}
+      </Fragment>
+    );
   }
 );
 
-KeyboardScrollContainer.displayName = 'KeyboardScrollContainer';
+Content.displayName = 'Content';
 
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1
   },
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: 'red'
   },
   scrollContainer: {
     flexGrow: 1
@@ -78,4 +105,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default KeyboardScrollContainer;
+export default Content;

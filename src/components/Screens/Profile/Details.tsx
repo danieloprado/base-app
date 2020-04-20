@@ -1,16 +1,17 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { Body, Button, Container, Content, H2, Icon, Left, List, ListItem, Spinner, Text, View } from 'native-base';
-import React, { memo, useCallback, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { Fragment, memo, useCallback, useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { Button, Icon, Text } from 'react-native-elements';
 import { useCallbackObservable, useRetryableObservable } from 'react-use-observable';
 import { filter, switchMap } from 'rxjs/operators';
+import theme from '~/assets/theme';
+import Content from '~/components/Shared/Content';
 import ErrorMessage from '~/components/Shared/ErrorMessage';
+import IconMessage from '~/components/Shared/IconMessage';
 import Alert from '~/facades/alert';
 import { loader } from '~/helpers/rxjs-operators/loader';
 import { logError } from '~/helpers/rxjs-operators/logError';
 import userService from '~/services/user';
-
-const classes: any = {};
 
 const ProfileScreen = memo(() => {
   const navigation = useNavigation();
@@ -27,104 +28,70 @@ const ProfileScreen = memo(() => {
     );
   }, []);
 
-  const navigateEdit = useCallback(() => navigation.navigate('UserEdit', { user }), [navigation, user]);
+  const navigateEdit = useCallback(() => navigation.navigate('ProfileEdit'), [navigation]);
   const navigateLogin = useCallback(() => navigation.navigate('Login', { force: true }), [navigation]);
 
   useEffect(() => {
-    // todo: here
-    // navigation.setParam({ navigateEdit: user ? navigateEdit : null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigateEdit, user]);
+    navigation.setOptions({
+      headerTitle: 'Perfil',
+      headerRight: ({ tintColor }: any) =>
+        user && <Button type='clear' onPress={navigateEdit} icon={{ name: 'pencil', color: tintColor }} />
+    });
+  }, [user, navigation, navigateEdit]);
 
   useFocusEffect(reload);
 
   const loading = user === undefined && error === undefined;
 
   return (
-    <Container>
-      <Content>
-        {loading && <Spinner />}
-        {!loading && !user && error && <ErrorMessage error={error} />}
-        {!loading && !user && !error && (
-          <View style={[classes.emptyMessage, classes.alignCenter]}>
-            <Icon active name='contact' style={[styles.loginIcon, classes.iconLarge]} />
-            <Text style={styles.loginText}>Ainda não te conhecemos, mas gostaríamos de saber mais sobre você!</Text>
-            <Button block onPress={navigateLogin}>
-              <Text>ENTRAR</Text>
-            </Button>
+    <Fragment>
+      {loading && (
+        <Content>
+          <ActivityIndicator size='large' />
+        </Content>
+      )}
+
+      {!loading && !user && error && (
+        <Content>
+          <ErrorMessage error={error} />
+        </Content>
+      )}
+
+      {!loading && !user && !error && (
+        <Content>
+          <IconMessage
+            icon='account-circle'
+            message='Ainda não te conhecemos, mas gostaríamos de saber mais sobre você!'
+            button='Entrar'
+            onPress={navigateLogin}
+          />
+        </Content>
+      )}
+
+      {!loading && user && (
+        <View>
+          <View style={styles.header}>
+            <Icon name='account-circle' color='white' size={80} />
+            <Text h3 style={styles.headerText}>
+              {`${user.firstName} ${user.lastName ?? ''}`.trim()}
+            </Text>
           </View>
-        )}
-        {!loading && user && (
-          <View>
-            <View style={styles.header}>
-              <Icon active name='contact' style={styles.avatarIcon} />
-              <H2 style={styles.headerText}>{`${user.firstName} ${user.lastName}`}</H2>
-            </View>
-            <List>
-              {!!user.email && (
-                <ListItem style={[classes.listItem, styles.listItem]}>
-                  <Left style={classes.listIconWrapper}>
-                    <Icon active name='mail' style={classes.listIcon} />
-                  </Left>
-                  <Body>
-                    <Text>{user.email}</Text>
-                  </Body>
-                </ListItem>
-              )}
-            </List>
-            <Button block light style={styles.logoutButton} onPress={logout}>
-              <Text>SAIR</Text>
-            </Button>
-          </View>
-        )}
-      </Content>
-    </Container>
+          <Button style={styles.logoutButton} onPress={logout} title='Sair' />
+        </View>
+      )}
+    </Fragment>
   );
 });
 
-// ProfileScreen.navigationOptions = ({ navigation }) => {
-//   return {
-//     title: 'Perfil',
-//     headerLeft: () => (
-//       <Button style={classes.headerButton} onPress={navigation.toggleDrawer}>
-//         <Icon name='menu' />
-//       </Button>
-//     ),
-//     headerRight: navigation.getParam('navigateEdit') && (
-//       <Button style={classes.headerButton} onPress={navigation.getParam('navigateEdit')}>
-//         <Icon name='create' />
-//       </Button>
-//     ),
-//     drawerIcon: ({ tintColor }) => <Icon name='contact' style={{ color: tintColor }} />
-//   };
-// };
-
 const styles = StyleSheet.create({
-  loginIcon: {
-    marginTop: 20,
-    marginBottom: 10
-    // color: variablesTheme.brandPrimary
-  },
-  loginText: {
-    textAlign: 'center',
-    marginBottom: 20
-  },
   header: {
-    // backgroundColor: variablesTheme.brandPrimary,
+    backgroundColor: theme.colors.primary,
     padding: 16,
     justifyContent: 'center',
     alignItems: 'center'
   },
   headerText: {
     color: 'white'
-  },
-  avatarIcon: {
-    marginBottom: 10,
-    color: 'white',
-    fontSize: 100
-  },
-  listItem: {
-    borderBottomWidth: 0
   },
   logoutButton: {
     margin: 16
