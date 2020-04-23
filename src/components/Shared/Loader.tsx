@@ -1,6 +1,5 @@
-import { Spinner } from 'native-base';
 import React, { memo } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native';
 import { useObservable } from 'react-use-observable';
 import loaderService from '~/services/loader';
 
@@ -10,7 +9,7 @@ const Loader = memo(() => {
   return (
     <Modal animationType='fade' transparent={true} visible={visible}>
       <View style={styles.container}>
-        <Spinner size='large' />
+        <ActivityIndicator size='large' color='white' />
       </View>
     </Modal>
   );

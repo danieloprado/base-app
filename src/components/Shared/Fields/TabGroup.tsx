@@ -2,8 +2,6 @@ import React, { memo, useCallback, useMemo, useState } from 'react';
 import { InteractionManager } from 'react-native';
 import TabIndexContext from '~/hooks/useTabIndex/context';
 
-export { IValidationContextRef } from '@react-form-fields/core/ValidationContext';
-
 const TabGroup = memo(({ children }) => {
   const [fields, setFields] = useState<{ position: number; onFocusHandler: Function }[]>([]);
 

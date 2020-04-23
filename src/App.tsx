@@ -1,7 +1,4 @@
-import ConfigProvider, { ConfigBuilder } from '@react-form-fields/native-base/ConfigProvider';
-import langConfig from '@react-form-fields/native-base/ConfigProvider/langs/pt-br';
 import { CommonActions, NavigationContainerRef, Route } from '@react-navigation/native';
-import { Root } from 'native-base';
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { ThemeProvider } from 'react-native-elements';
 import FlashMessage from 'react-native-flash-message';
@@ -18,13 +15,6 @@ import Toast from './facades/toast';
 import { setupServices } from './services';
 import cacheService from './services/cache';
 import tokenService from './services/token';
-
-const config = new ConfigBuilder()
-  .fromLang(langConfig)
-  .setValidationOn('onSubmit')
-  .setIconProps({ type: 'MaterialCommunityIcons' }, 'chevron-down', 'magnify', 'close')
-  .setItemProps({ floatingLabel: false })
-  .build();
 
 const App = memo(() => {
   const navigatorRef = useRef<NavigationContainerRef>();
@@ -56,13 +46,9 @@ const App = memo(() => {
   return (
     <ThemeProvider theme={theme}>
       <MenuProvider>
-        <ConfigProvider value={config}>
-          <Root>
-            <Loader />
-            <Navigator ref={navigatorRef} onStateChange={setCurrentScreen} />
-            <FlashMessage position='top' />
-          </Root>
-        </ConfigProvider>
+        <Loader />
+        <Navigator ref={navigatorRef} onStateChange={setCurrentScreen} />
+        <FlashMessage position='top' />
       </MenuProvider>
     </ThemeProvider>
   );
