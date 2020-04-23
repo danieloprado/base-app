@@ -32,10 +32,29 @@ async function init() {
 
   fs.copyFileSync('./.env.example', './.env');
 
+  await resetGit(params);
+  await selfDestruction();
+
   console.log('\n**********************************************************');
   console.log('Completo!');
   console.log('Lembre-se de criar o arquivo .env antes de iniciar o app');
   console.log('**********************************************************\n');
+}
+
+async function resetGit(params) {
+  const originalRepo = await execCommand('git remote get-url origin');
+  await execCommand('git remote remove origin');
+  await execCommand(`git remote add seed ${originalRepo}`);
+
+  if (params.repository) {
+    await execCommand(`git remote add origin ${params.repository}`);
+  }
+
+  await execCommand('git add . && git commit -am "initial"');
+}
+
+async function selfDestruction() {
+  await new Promise((resolve, reject) => rimraf('./init.js', err => (err ? reject(err) : resolve())));
 }
 
 async function askParams(answers = {}) {
@@ -49,6 +68,10 @@ async function askParams(answers = {}) {
     default: answers.appName,
     validate: i => i.length >= 3 ? true : 'Pelo menos 3 letras',
     message: 'Nome do app'
+  }, {
+    name: 'repository',
+    default: answers.repository,
+    message: 'Repositorio'
   }, {
     name: 'confirmed',
     type: 'confirm',
